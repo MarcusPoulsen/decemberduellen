@@ -758,3 +758,15 @@ fieldset:has(input[name="choice-0"]) {
 @media (max-width: 620px) {
   .guide-steps { grid-template-columns: 1fr; }
 }
+
+.buzzer-explainer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(.75rem, 2vw, 1.25rem);
+}
+.buzzer-explainer > div > * + * { margin-top: .45rem; }
+.buzzer-photo { margin: 0; text-align: center; }
+.buzzer-photo img { display: block; width: clamp(3rem, 8vw, 4.5rem); height: auto; margin: 0 auto; border-radius: .4rem; }
+.buzzer-photo figcaption { font-size: .72rem; margin-top: .2rem; }
+.guide-buzzer { background: #f1e5d0; border-radius: .8rem; padding: 1rem; }

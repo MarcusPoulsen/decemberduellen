@@ -137,6 +137,13 @@ function scoreboard(kind, entries, compact = false) {
     <ol>${rankingRows(entries, kind, compact)}</ol></section>`;
 }
 
+function buzzerPhoto() {
+  return `<figure class="buzzer-photo">
+    <img src="assets/buzz-buzzer.jpg" width="248" height="560" alt="PS2 Buzz!-buzzer med en stor rød knap øverst og fire mindre farveknapper">
+    <figcaption><a href="https://commons.wikimedia.org/wiki/File:Buzz_Buzzer.jpg">Foto af X201</a></figcaption>
+  </figure>`;
+}
+
 function setupView(show) {
   if (show.phase !== 'lobby') return `<section class="panel"><h2>Holdene er klar</h2><p>Holdfordelingen er fast under showet. Brug Nulstil show for at oprette nye hold.</p></section>`;
   const count = show.teams.length || 2;
@@ -154,9 +161,14 @@ function setupView(show) {
         <label>Spillernavn<input name="player-${index}" value="${html(show.players[index]?.name ?? `Spiller ${number}`)}" required maxlength="40"></label>
         <label>Hold<select name="assignment-${index}" data-assignment="${index}"></select></label>
       </fieldset>`).join('')}</div>
-      <div class="keyboard-setup">
-        <label class="check"><input name="keyboard-buzz" type="checkbox" ${data.keyboardBuzz ? 'checked' : ''} aria-describedby="keyboard-help"> Jeg har ikke buzzere</label>
-        <p id="keyboard-help" class="muted">Lad værten bruge tasterne 1–8. Spillerknapperne på skærmen kan også bruges med musen.</p>
+      <div class="keyboard-setup buzzer-explainer">
+        ${buzzerPhoto()}
+        <div>
+          <h3>PS2 Buzz!-buzzer</h3>
+          <p class="muted">En controller fra PlayStation 2-spillet Buzz! Den store røde knap bruges til at melde sig klar til at svare.</p>
+          <label class="check"><input name="keyboard-buzz" type="checkbox" ${data.keyboardBuzz ? 'checked' : ''} aria-describedby="keyboard-help"> Jeg har ikke buzzere</label>
+          <p id="keyboard-help" class="muted">I webudgaven kan værten bruge tasterne 1–8 eller klikke på spillerknapperne med musen.</p>
+        </div>
       </div>
       <button class="primary" type="submit">Gem hold</button>
     </form></section>`;
@@ -392,6 +404,13 @@ function guideView() {
       </div><h3>Start showet</h3><p>Åbn TV-vinduet, flyt det til storskærmen, og vælg <strong>Fuldskærm</strong>. Start fra <strong>Afvikling</strong>. Brug spillernes taltaster i buzzerrunderne.</p>
       <a class="button" href="?tv" target="decemberduellen-tv">Åbn TV-vindue ↗</a></li>
     </ol>
+    <div class="buzzer-explainer guide-buzzer">
+      ${buzzerPhoto()}
+      <div><h3>Hvad er en PS2 Buzz!-buzzer?</h3>
+        <p>Det er en controller fra PlayStation 2-spillet Buzz! Spilleren trykker på den store røde knap for at melde sig klar til at svare.</p>
+        <p>I webudgaven kan værten i stedet bruge tasterne 1–8 eller klikke på spillerknapperne.</p>
+      </div>
+    </div>
     <p><strong>Nulstil show</strong> rydder hold, point og fremdrift og beholder dine opgaver og avatarbilleder.</p>
   </section>`;
 }
