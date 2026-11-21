@@ -1,8 +1,8 @@
-# Decemberduellen
+# Det Store Juleshow 2026
 
 Et dansk julegameshow til julefrokosten eller en aften med familie og venner. Spil julequiz, musikquiz og små udfordringer, og følg pointene på storskærmen i Decemberræset.
 
-**[Åbn Decemberduellen](https://marcuspoulsen.github.io/decemberduellen/)**
+**[Åbn Det Store Juleshow 2026](https://marcuspoulsen.github.io/decemberduellen/)**
 
 1. Gå til **Opsætning**, vælg op til fire hold og otte spillere i alt, navngiv dem, og gem holdene.
 2. Vælg **Åbn TV-vindue** fra kontrolpulten. Flyt vinduet til den anden skærm, og vælg **Fuldskærm**. Brug samme browser og profil til begge vinduer.

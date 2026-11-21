@@ -388,7 +388,7 @@ function guideView() {
         <strong>Dit program</strong><span aria-hidden="true">↓</span><span>✓ Gemt i browseren</span>
       </div><h3>Fortsæt en anden dag</h3><p>Showet gemmes i browserens lokale lager (<code>localStorage</code>). Åbn samme link på samme enhed og i samme browserprofil. Andre enheder har deres eget lager. Hvis du rydder webstedsdata, slettes dit gemte show.</p></li>
       <li><div class="guide-preview guide-tv" aria-hidden="true">
-        <span>❄</span><strong>Decemberduellen</strong><span>❄</span>
+        <span>❄</span><strong>Det Store Juleshow 2026</strong><span>❄</span>
       </div><h3>Start showet</h3><p>Åbn TV-vinduet, flyt det til storskærmen, og vælg <strong>Fuldskærm</strong>. Start fra <strong>Afvikling</strong>. Brug spillernes taltaster i buzzerrunderne.</p>
       <a class="button" href="?tv" target="decemberduellen-tv">Åbn TV-vindue ↗</a></li>
     </ol>
@@ -399,7 +399,7 @@ function guideView() {
 function hostView() {
   const show = data.show;
   const scores = standings(show);
-  app.innerHTML = `<header class="host-header"><div><p class="eyebrow">Værtens kontrolpult</p><h1>Decemberduellen</h1></div>
+  app.innerHTML = `<header class="host-header"><div><p class="eyebrow">Værtens kontrolpult</p><h1>Det Store Juleshow 2026</h1></div>
     <div class="actions"><a class="button" href="?tv" target="decemberduellen-tv">Åbn TV-vindue ↗</a>
     ${button('reset', 'Nulstil show')}</div></header>
     <main class="host"><nav class="tabs" aria-label="Værtsvisninger">${[
@@ -504,7 +504,7 @@ function tvView() {
   const music = show.revealed && element?.type === 'music' ? musicReveal(trackId(task.link)) : null;
   let main;
   if (show.phase === 'lobby') {
-    main = '<div class="tv-center lobby"><p class="eyebrow">✦ Glædelig jul ✦</p><h1>Decemberduellen</h1><p>Showet starter snart</p></div>';
+    main = '<div class="tv-center lobby"><p class="eyebrow">✦ Glædelig jul ✦</p><h1>Det Store Juleshow 2026</h1><p>Showet starter snart</p></div>';
   } else if (show.phase === 'scores') {
     main = `<div class="tv-board"><h1 aria-label="Stillingen"><span aria-hidden="true">🎄</span> Stillingen <span aria-hidden="true">🎄</span></h1>
       ${raceMarkup(scores, show)}</div>`;
