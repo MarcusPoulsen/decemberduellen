@@ -13,18 +13,19 @@ const key = 'decemberduellen-v1';
 const isTV = new URLSearchParams(location.search).has('tv');
 const winter = isTV ? createWinter() : null;
 const showAudio = isTV ? createShowAudio() : null;
-const roster = [
-  { name: 'Spiller 1', image: 'assets/rensdyr.svg' },
-  { name: 'Spiller 2', image: 'assets/pingvin.svg' },
-  { name: 'Spiller 3', image: 'assets/snemand.svg' },
-  { name: 'Spiller 4', image: 'assets/nisse.svg' }
-];
-const defaultAvatars = roster.map(player => player.image);
+const maxPlayers = 8;
+const maxTeams = 4;
+const playerCounts = Array.from({ length: maxPlayers }, (_, index) => index + 1);
+const teamCounts = playerCounts.slice(0, maxTeams);
+const avatarNames = ['rensdyr', 'pingvin', 'snemand', 'nisse'];
+const defaultAvatars = playerCounts.map((_, index) => `assets/${avatarNames[index % avatarNames.length]}.svg`);
 const finaleStepMs = 5000;
-const initialData = () => ({ elements: structuredClone(elements), avatars: [...defaultAvatars], show: newShow() });
+const initialData = () => ({ elements: structuredClone(elements), avatars: [...defaultAvatars], keyboardBuzz: true, show: newShow() });
 function read() {
   const saved = JSON.parse(localStorage.getItem(key) || 'null');
   if (!saved) return initialData();
+  saved.avatars = defaultAvatars.map((image, index) => saved.avatars?.[index] ?? image);
+  saved.keyboardBuzz ??= true;
   for (const element of elements) {
     const existing = saved.elements.find(item => item.id === element.id);
     if (!existing) saved.elements.push(structuredClone(element));
@@ -66,7 +67,7 @@ function buzzStatus(show) {
   const team = show.teams.find(team => team.id === show.buzzedTeamId);
   const player = show.players.find(player => player.id === show.buzzedPlayerId && player.team === team?.id);
   return team ? `<p class="buzz-status" role="status">
-    ${player ? avatar(player.avatar, player.name) : ''}<span>${html(team.name)} har buzzet!</span></p>` : '';
+    ${player ? avatar(player.avatar, player.name) : ''}<span>${player ? `${html(player.name)} · ` : ''}${html(team.name)} har buzzet!</span></p>` : '';
 }
 const clock = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 const shortcuts = { timer: 'a', 'stop-timer': 's', 'clear-timer': 'd', reveal: 'c',
@@ -135,15 +136,24 @@ function scoreboard(kind, entries, compact = false) {
 function setupView(show) {
   if (show.phase !== 'lobby') return `<section class="panel"><h2>Holdene er klar</h2><p>Holdfordelingen er fast under showet. Brug Nulstil show for at oprette nye hold.</p></section>`;
   const count = show.teams.length || 2;
+  const playerCount = show.players.length || 4;
   return `<section class="panel"><h2>Gør holdene klar</h2>
     <form data-form="setup">
-      <label>Antal hold <select name="count">${[1, 2, 3, 4].map(n => option(String(n), String(n), String(count))).join('')}</select></label>
+      <div class="form-grid">
+        <label>Antal hold <select name="count">${teamCounts.map(n => option(n, n, count)).join('')}</select></label>
+        <label>Antal spillere <select name="players">${playerCounts.map(n => option(n, n, playerCount)).join('')}</select></label>
+      </div>
       <div id="team-fields" class="form-grid"></div>
-      <div class="form-grid player-fields">${roster.map(({ name }, index) => `<div class="player-setup">
+      <div class="form-grid player-fields">${playerCounts.map((number, index) => `<fieldset class="player-setup" data-player-card ${number > playerCount ? 'hidden disabled' : ''}>
+        <legend>Spiller ${number}</legend>
         <label class="avatar-upload" title="Udskift avatar">${avatar(index)}<span>Skift billede</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-avatar="${index}"></label>
-        <label>Spillernavn<input name="player-${index}" value="${html(show.players[index]?.name ?? name)}" required maxlength="40"></label>
+        <label>Spillernavn<input name="player-${index}" value="${html(show.players[index]?.name ?? `Spiller ${number}`)}" required maxlength="40"></label>
         <label>Hold<select name="assignment-${index}" data-assignment="${index}"></select></label>
-      </div>`).join('')}</div>
+      </fieldset>`).join('')}</div>
+      <div class="keyboard-setup">
+        <label class="check"><input name="keyboard-buzz" type="checkbox" ${data.keyboardBuzz ? 'checked' : ''} aria-describedby="keyboard-help"> Jeg har ikke buzzere</label>
+        <p id="keyboard-help" class="muted">Lad værten bruge tasterne 1–8. Spillerknapperne på skærmen kan også bruges med musen.</p>
+      </div>
       <button class="primary" type="submit">Gem hold</button>
     </form></section>`;
 }
@@ -159,6 +169,9 @@ function setupFields(form, reset = false) {
     form.querySelector('#team-fields').innerHTML = names.map((name, index) =>
       `<label>Hold ${index + 1}<input name="team-${index}" value="${html(name)}" placeholder="Holdnavn" required maxlength="40"></label>`).join('');
   }
+  form.querySelectorAll('[data-player-card]').forEach((card, index) => {
+    card.hidden = card.disabled = index >= Number(form.elements.players.value);
+  });
   form.querySelectorAll('[data-assignment]').forEach((select, index) => {
     const selected = String(Math.min(assignments[index], count));
     select.innerHTML = names.map((name, team) => option(String(team + 1), name || `Hold ${team + 1}`, selected)).join('');
@@ -334,14 +347,14 @@ function controlView(show, scores) {
       ${task.answer ? button('reveal', show.revealed ? 'Skjul facit' : 'Afslør facit', 'class="primary"') : ''}
     </div>
     ${isBuzzerTask(element, task) ? `<div class="buzzer"><h3>Buzzer</h3>
-      <p class="muted buzzer-help">Klik på spilleren, eller tryk på spillerens tal (1–4) i kontrolpulten eller TV-vinduet.</p>
+      <p class="muted buzzer-help">Klik på spilleren${data.keyboardBuzz ? ', eller tryk på tallet ved navnet.' : '.'}</p>
       ${buzzStatus(show)}
       ${buzzedTeam && !show.revealed ? `<div class="actions">${button('award',
         `Korrekt · ${html(musicQuizPlayer?.name ?? buzzedTeam.name)} (+${task.points})`,
         `class="primary" data-kind="team" data-id="${buzzedTeam.id}" data-buzz-award`, 'k')}</div>` : ''}
       <div class="actions">${show.players.map(player =>
-        button('buzz', `${player.avatar + 1} · ${html(player.name)}`,
-          `data-buzz="${player.id}" data-team="${player.team}"`)).join('')}</div>
+        button('buzz', html(player.name),
+          `data-buzz="${player.id}" data-team="${player.team}"`, data.keyboardBuzz ? String(player.avatar + 1) : undefined)).join('')}</div>
       <div class="actions">${show.teams.map(team =>
         button('lock', `<span data-lock-label>Forkert: ${html(team.name)}</span>`,
           `data-id="${team.id}" data-name="${html(team.name)}" data-lock="${show.locks[team.id] ?? 0}"`,
@@ -355,6 +368,30 @@ function controlView(show, scores) {
   </section>${task.choices ? '' : pointControls(show, scores, task, element)}</div>`;
 }
 
+function guideView() {
+  return `<section class="panel show-guide" aria-labelledby="guide-heading">
+    <h2 id="guide-heading">Lav dit eget juleshow</h2>
+    <ol class="guide-steps">
+      <li><div class="guide-preview guide-teams" aria-hidden="true">
+        <span><img src="assets/nisse.svg" alt="">Nisserne</span><span><img src="assets/rensdyr.svg" alt="">Rensdyrene</span>
+      </div><h3>Gør holdene klar</h3><p>Vælg op til 4 hold og 8 spillere i alt. Fordel spillerne, vælg tastaturstyring med <strong>Jeg har ikke buzzere</strong>, og klik <strong>Gem hold</strong>.</p>
+      ${button('tab', 'Åbn Opsætning', 'data-tab="setup"')}</li>
+      <li><div class="guide-preview guide-question" aria-hidden="true">
+        <small>Julequiz</small><span>Hvad er der i risalamanden?</span><b>Gem opgave</b>
+      </div><h3>Byg dit program</h3><p>Vælg en runde under <strong>Rediger program</strong>. Ret en opgave, eller vælg <strong>Tilføj opgave</strong>. Udfyld felterne, og klik <strong>Gem opgave</strong> for hver ændring.</p>
+      ${button('tab', 'Åbn Rediger program', 'data-tab="editor"')}</li>
+      <li><div class="guide-preview guide-storage" role="img" aria-label="Spilprogrammet gemmes i browserens lokale lager">
+        <strong>Dit program</strong><span aria-hidden="true">↓</span><span>✓ Gemt i browseren</span>
+      </div><h3>Fortsæt en anden dag</h3><p>Showet gemmes i browserens lokale lager (<code>localStorage</code>). Åbn samme link på samme enhed og i samme browserprofil. Andre enheder har deres eget lager. Hvis du rydder webstedsdata, slettes dit gemte show.</p></li>
+      <li><div class="guide-preview guide-tv" aria-hidden="true">
+        <span>❄</span><strong>Decemberduellen</strong><span>❄</span>
+      </div><h3>Start showet</h3><p>Åbn TV-vinduet, flyt det til storskærmen, og vælg <strong>Fuldskærm</strong>. Start fra <strong>Afvikling</strong>. Brug spillernes taltaster i buzzerrunderne.</p>
+      <a class="button" href="?tv" target="decemberduellen-tv">Åbn TV-vindue ↗</a></li>
+    </ol>
+    <p><strong>Nulstil show</strong> rydder hold, point og fremdrift og beholder dine opgaver og avatarbilleder.</p>
+  </section>`;
+}
+
 function hostView() {
   const show = data.show;
   const scores = standings(show);
@@ -362,10 +399,10 @@ function hostView() {
     <div class="actions"><a class="button" href="?tv" target="decemberduellen-tv">Åbn TV-vindue ↗</a>
     ${button('reset', 'Nulstil show')}</div></header>
     <main class="host"><nav class="tabs" aria-label="Værtsvisninger">${[
-      ['setup', 'Opsætning'], ['editor', 'Rediger program'], ['control', 'Afvikling']
+      ['setup', 'Opsætning'], ['editor', 'Rediger program'], ['control', 'Afvikling'], ['guide', 'Guide']
     ].map(([id, label]) => button('tab', label, `data-tab="${id}" aria-pressed="${id === tab}"`)).join('')}</nav>
     <p class="notice" role="status">${html(notice)}</p>
-    ${tab === 'setup' ? setupView(show) : tab === 'editor' ? editorView() :
+    ${tab === 'setup' ? setupView(show) : tab === 'editor' ? editorView() : tab === 'guide' ? guideView() :
       `${controlView(show, scores)}`}
     ${show.players.length ? `<div class="host-scores">${scoreboard('teams', scores.teams, true)}${scoreboard('players', scores.players, true)}</div>` : ''}
     </main>`;
@@ -427,7 +464,7 @@ function raceMarkup(scores, show) {
         </div></div>
       </li>`;
     }).join('');
-  return `<div class="race">
+  return `<div class="race${scores.players.length + scores.teams.length > 7 ? ' race-dense' : ''}">
     <div class="race-axis" aria-hidden="true"><span style="--fraction:0">Start</span>${labels}</div>
     <ol class="race-lanes" aria-label="Spillerræs">${lanes([...scores.players].sort((a, b) => a.avatar - b.avatar), show.raceScores)}</ol>
     <h2 class="race-team-title">Holdræs</h2>
@@ -591,7 +628,7 @@ function tick() {
 }
 
 function startShow() {
-  if (data.show.players.length !== 4) return;
+  if (!data.show.players.length) return;
   tab = 'control';
   update(() => moveTo(data.show, positionAt(0), { secondsFor }));
 }
@@ -734,7 +771,7 @@ window.addEventListener('keydown', event => {
   if (event.defaultPrevented || event.repeat || event.isComposing || event.ctrlKey ||
       event.metaKey || event.altKey || event.shiftKey ||
       event.target.closest?.('input, textarea, select, [contenteditable]')) return;
-  if (/^[1-4]$/.test(event.key)) {
+  if (data.keyboardBuzz && /^[1-8]$/.test(event.key)) {
     buzz(player => player.avatar + 1 === Number(event.key));
     return;
   }
@@ -753,7 +790,14 @@ app.addEventListener('input', event => {
 app.addEventListener('change', async event => {
   const input = event.target;
   notice = '';
-  if (input.name === 'count') setupFields(input.form, true);
+  if (input.name === 'count' || input.name === 'players') {
+    const { count, players } = input.form.elements;
+    if (Number(count.value) > Number(players.value)) {
+      if (input === count) players.value = count.value;
+      else count.value = players.value;
+    }
+    setupFields(input.form, true);
+  }
   if (input.dataset.select === 'editor') { editor = input.value; editedIndex = 0; render(); }
   if (input.dataset.select === 'task') { editedIndex = Number(input.value); render(); }
   if (input.dataset.select === 'jump' && input.value) {
@@ -821,7 +865,7 @@ app.addEventListener('submit', event => {
   if (form.dataset.form === 'setup') {
     const teams = Array.from({ length: Number(get('count')) }, (_, index) =>
       ({ id: String(index + 1), name: get(`team-${index}`) }));
-    const players = roster.map((_, index) => ({
+    const players = Array.from({ length: Number(get('players')) }, (_, index) => ({
       id: String(index + 1), avatar: index, name: get(`player-${index}`).trim(), team: get(`assignment-${index}`)
     }));
     if ([...teams, ...players].some(entry => !entry.name) || teams.some(team => !players.some(player => player.team === team.id))) {
@@ -830,7 +874,10 @@ app.addEventListener('submit', event => {
     }
     tab = 'control';
     notice = 'Holdene er gemt.';
-    update(() => Object.assign(data.show, { teams, players }));
+    update(() => {
+      data.keyboardBuzz = formData.has('keyboard-buzz');
+      Object.assign(data.show, { teams, players });
+    });
   }
   if (form.dataset.form === 'editor') {
     const element = findElement(editor);
