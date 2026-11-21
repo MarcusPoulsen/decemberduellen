@@ -17,14 +17,18 @@ const maxPlayers = 8;
 const maxTeams = 4;
 const playerCounts = Array.from({ length: maxPlayers }, (_, index) => index + 1);
 const teamCounts = playerCounts.slice(0, maxTeams);
-const avatarNames = ['rensdyr', 'pingvin', 'snemand', 'nisse'];
-const defaultAvatars = playerCounts.map((_, index) => `assets/${avatarNames[index % avatarNames.length]}.svg`);
+const avatarNames = ['rensdyr', 'pingvin', 'snemand', 'nisse', 'juletrae', 'gave', 'honningkage', 'klokke'];
+const defaultAvatars = avatarNames.map(name => `assets/${name}.svg`);
 const finaleStepMs = 5000;
 const initialData = () => ({ elements: structuredClone(elements), avatars: [...defaultAvatars], keyboardBuzz: true, show: newShow() });
 function read() {
   const saved = JSON.parse(localStorage.getItem(key) || 'null');
   if (!saved) return initialData();
-  saved.avatars = defaultAvatars.map((image, index) => saved.avatars?.[index] ?? image);
+  saved.avatars = defaultAvatars.map((image, index) => {
+    const savedImage = saved.avatars?.[index];
+    const duplicateDefault = index >= 4 && savedImage === defaultAvatars[index - 4];
+    return duplicateDefault ? image : savedImage ?? image;
+  });
   saved.keyboardBuzz ??= true;
   for (const element of elements) {
     const existing = saved.elements.find(item => item.id === element.id);
