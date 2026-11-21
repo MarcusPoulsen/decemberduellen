@@ -84,6 +84,10 @@ const option = (value, label, selected) => `<option value="${html(value)}" ${val
 const avatar = (index, name = '') => `<img class="avatar" src="${html(data.avatars[index])}" alt="${html(name)}">`;
 const trackId = link => /^(?:https:\/\/open\.spotify\.com\/track\/|spotify:track:)([a-zA-Z0-9]{22})(?:[?#].*)?$/.exec(link ?? '')?.[1];
 const timerAttrs = (show, task) => `data-deadline="${show.deadline ?? 0}" data-fallback="${show.pausedMs == null ? task.seconds : Math.ceil(show.pausedMs / 1000)}"`;
+// Leave current or queued pages reachable for shows already in progress.
+const inProgress = (element, index) =>
+  [data.show.current, data.show.pending].some(position => position?.element === element && position.index === index);
+
 const positions = () => data.elements.flatMap(element => {
   const tasks = element.tasks.map((task, index) => ({ element: element.id, index, task }));
   if (element.id === 'julequiz') {
@@ -97,7 +101,8 @@ const positions = () => data.elements.flatMap(element => {
       ...tasks.filter(({ task }) => task.karaoke)];
   }
   return tasks;
-});
+}).filter(({ element, index, task }) =>
+  !data.keyboardBuzz || (!task.choices && !task.speedRoundIntro) || inProgress(element, index));
 const positionIndex = position => positions().findIndex(item => item.element === position?.element && item.index === position?.index);
 const positionAt = index => {
   const item = positions()[index];
@@ -167,7 +172,7 @@ function setupView(show) {
           <h3>PS2 Buzz!-buzzer</h3>
           <p class="muted">En controller fra PlayStation 2-spillet Buzz! Den store røde knap bruges til at melde sig klar til at svare.</p>
           <label class="check"><input name="keyboard-buzz" type="checkbox" ${data.keyboardBuzz ? 'checked' : ''} aria-describedby="keyboard-help"> Jeg har ikke buzzere</label>
-          <p id="keyboard-help" class="muted">I webudgaven kan værten bruge tasterne 1–8 eller klikke på spillerknapperne med musen.</p>
+          <p id="keyboard-help" class="muted">Brug tasterne 1–8 eller klik på spillerknapperne. Når feltet er valgt, springes lynrunden med farvesvar over.</p>
         </div>
       </div>
       <button class="primary" type="submit">Gem hold</button>
@@ -408,7 +413,7 @@ function guideView() {
       ${buzzerPhoto()}
       <div><h3>Hvad er en PS2 Buzz!-buzzer?</h3>
         <p>Det er en controller fra PlayStation 2-spillet Buzz! Spilleren trykker på den store røde knap for at melde sig klar til at svare.</p>
-        <p>I webudgaven kan værten i stedet bruge tasterne 1–8 eller klikke på spillerknapperne.</p>
+        <p>Vælg <strong>Jeg har ikke buzzere</strong> for at bruge tasterne 1–8 i de almindelige buzzerrunder og springe lynrunden med farvesvar over.</p>
       </div>
     </div>
     <p><strong>Nulstil show</strong> rydder hold, point og fremdrift og beholder dine opgaver og avatarbilleder.</p>
