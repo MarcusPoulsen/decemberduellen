@@ -6,7 +6,7 @@ import {
   racePosition, remaining, rememberChoiceResult, rouletteColor, rouletteColors, rouletteDelta, rouletteWheel,
   settleRoulette, spinDuration, standings, submitChoice
 } from './show.js?v=pointkort';
-import { createShowAudio } from './show-audio.js';
+import { createShowAudio } from './show-audio.js?v=juleloop';
 
 const app = document.querySelector('#app');
 const key = 'decemberduellen-v1';
@@ -529,7 +529,10 @@ function tick() {
   }
   if (showAudio) {
     const winnerDelay = show.phase === 'finale' ? new Set(standings(show).players.map(player => player.rank)).size * finaleStepMs : 0;
-    showAudio.sync(show, winnerDelay);
+    const isMusic = position => findElement(position?.element)?.type === 'music';
+    const musicRound = (show.phase === 'task' && isMusic(show.current)) ||
+      (show.phase === 'scores' && (isMusic(show.current) || isMusic(show.pending)));
+    showAudio.sync(show, winnerDelay, musicRound);
   }
   const rouletteStatus = app.querySelector('[data-roulette-status]');
   if (rouletteStatus) {

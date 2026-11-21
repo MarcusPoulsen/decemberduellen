@@ -9,7 +9,7 @@ Et dansk julegameshow til julefrokosten eller en aften med familie og venner. Sp
 3. Start spillet under **Afvikling**. Som vært styrer du nedtælling, facit, point og finale. Under **Rediger program** kan du tilpasse spørgsmål, point og rækkefølge.
 4. Brug tasterne **1–4** eller spillerknapperne i almindelige buzzerrunder. Ved spørgsmål med farvekodede svar registrerer værten svarene i den rækkefølge, de bliver givet.
 
-Spillet gemmer stand og indstillinger lokalt i browseren. Musiknumre afspilles manuelt via Spotify. Aktivér eventuelt lydeffekter i TV-vinduet.
+Spillet gemmer stand og indstillinger lokalt i browseren. Musiknumre afspilles manuelt via Spotify. Vælg **Aktivér lyd** i TV-vinduet for at høre julemusikken og finalens lydeffekter. Baggrundsmusikken holder automatisk pause under Musikquiz og vender tilbage i næste del af showet.
 
 ## Lokal udvikling
 

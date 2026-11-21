@@ -13,7 +13,7 @@ export function createShowAudio() {
         currentCue = '';
         return;
       }
-      audio.src = 'assets/fanfare.wav';
+      audio.src = 'assets/juleloop.wav';
       audio.muted = true;
       try {
         await audio.play();
@@ -24,9 +24,9 @@ export function createShowAudio() {
         audio.muted = false;
       }
     },
-    sync(show, winnerDelay) {
+    sync(show, winnerDelay, musicRound) {
       if (!enabled) return;
-      let cue = '';
+      let cue = musicRound ? '' : 'juleloop';
       let offset = 0;
       if (show.phase === 'finale' && show.finaleStart) {
         const elapsed = Date.now() - show.finaleStart;
@@ -44,7 +44,7 @@ export function createShowAudio() {
       if (!cue) return;
       const [name] = cue.split(':');
       audio.src = `assets/${name}.wav`;
-      audio.loop = name === 'drumroll';
+      audio.loop = name === 'drumroll' || name === 'juleloop';
       audio.currentTime = Math.max(0, offset);
       audio.play().catch(() => {});
     }
